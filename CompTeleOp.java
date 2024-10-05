@@ -30,6 +30,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -63,7 +65,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Omni Linear OpMode", group="Linear OpMode")
+@TeleOp(name="teleopclaw")
 
 public class CompTeleOp extends LinearOpMode {
 
@@ -76,6 +78,7 @@ public class CompTeleOp extends LinearOpMode {
     private DcMotor armLeft = null;
     private DcMotor armRight = null;
     private DcMotor linearSlide = null;
+    private CRServo claw = null;
 
     @Override
     public void runOpMode() {
@@ -86,9 +89,10 @@ public class CompTeleOp extends LinearOpMode {
         leftBackDrive  = hardwareMap.get(DcMotor.class, "left_back_drive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
-        armLeft = hardwareMap.get(DcMotor.class, "arm-left");
-        armRight = hardwareMap.get(DcMotor.class, "arm-right");
-        linearSlide = hardwareMap.get(DcMotor.class, "linear-slide");
+        armLeft = hardwareMap.get(DcMotor.class, "arm_left");
+        armRight = hardwareMap.get(DcMotor.class, "arm_right");
+        linearSlide = hardwareMap.get(DcMotor.class, "linear_slide");
+        claw = hardwareMap.get(CRServo.class, "claw");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -100,9 +104,15 @@ public class CompTeleOp extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
+        armLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         // Wait for the game to start (driver presses PLAY)
@@ -130,7 +140,7 @@ public class CompTeleOp extends LinearOpMode {
             double rightBackPower  = axial + lateral - yaw;
 
             // Normalize the values so no wheel power exceeds 100%
-            // This ensures that the robot maintains the desired motion.
+            // This ensures that the robot maintains the de sired motion.
             max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
             max = Math.max(max, Math.abs(leftBackPower));
             max = Math.max(max, Math.abs(rightBackPower));
@@ -160,37 +170,67 @@ public class CompTeleOp extends LinearOpMode {
             */
 
             // Send calculated power to wheels
-            leftFrontDrive.setPower(leftFrontPower);
-            rightFrontDrive.setPower(rightFrontPower);
-            leftBackDrive.setPower(leftBackPower);
-            rightBackDrive.setPower(rightBackPower);
+            leftFrontDrive.setPower(leftFrontPower * 1);
+            rightFrontDrive.setPower(rightFrontPower * 1);
+            leftBackDrive.setPower(leftBackPower * 1);
+            rightBackDrive.setPower(rightBackPower * 1);
 
             //Arm code
             if(gamepad1.left_trigger > 0) {
-                armLeft.setPower(gamepad1.left_trigger * 2);
-                armRight.setPower(gamepad1.left_trigger * 2);
+                //going down
+                if(armRight.getCurrentPosition() < 50) {
+                    armLeft.setPower(-0.2);
+                    armRight.setPower(0.2);
+                } else if(armRight.getCurrentPosition() < 180) {
+                    armLeft.setPower(0.0);
+                    armRight.setPower(0.3);
+                } else {
+                    armLeft.setPower(0.8);
+                    armRight.setPower(-0.8);
+                }
             }else if(gamepad1.right_trigger > 0) {
-                armLeft.setPower(-(gamepad1.right_trigger * 2));
-                armRight.setPower(-(gamepad1.right_trigger * 2));
+                //going up
+                if(armRight.getCurrentPosition() > 180){
+                    armLeft.setPower(0.2);
+                    armRight.setPower(-0.2);
+                } else if(armRight.getCurrentPosition() > 160) {
+                    armLeft.setPower(-0.3);
+                    armRight.setPower(0.3);
+                }else {
+                    armLeft.setPower(-0.85);
+                    armRight.setPower(0.85);
+                }
             }else {
-                armLeft.setPower(0);
-                armRight.setPower(0);
+                if(armRight.getCurrentPosition() < 170) {
+                    armLeft.setPower(-0.4);
+                    armRight.setPower(0.4);
+                }else {
+                    armLeft.setPower(0.4);
+                    armRight.setPower(-0.4);
+                }
             }
 
 
-            if(gamepad1.a) {
+            if(gamepad1.left_bumper) {
                 linearSlide.setPower(1);
-            }else if(gamepad1.b) {
+            }else if(gamepad1.right_bumper) {
                 linearSlide.setPower(-1);
             }else {
                 linearSlide.setPower(0.01);
             }
 
+            if(gamepad1.a) {
+                claw.setPower(1);
+            }else if(gamepad1.b) {
+                claw.setPower(-1);
+            }else {
+                claw.setPower(0);
+            }
+
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("leftarm", armLeft.getCurrentPosition());
+            telemetry.addData("rightarm", armRight.getCurrentPosition());
             telemetry.update();
         }
     }}
-
