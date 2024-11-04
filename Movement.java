@@ -1,4 +1,5 @@
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -14,6 +15,7 @@ public class Movement extends LinearOpMode{
     DcMotor linearSlide;
     DcMotor armLeft;
     DcMotor armRight;
+    Servo claw;
 
     double integralSum = 0;
     double Kp = 0.1;
@@ -32,6 +34,7 @@ public class Movement extends LinearOpMode{
         armLeft = hardwareMap.get(DcMotor.class, "arm_left");
         armRight = hardwareMap.get(DcMotor.class, "arm_right");
         linearSlide = hardwareMap.get(DcMotor.class, "linear_slide");
+        claw = hardwareMap.get(Servo.class, "claw");
 
         leftFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -74,6 +77,24 @@ public class Movement extends LinearOpMode{
         double out = (error*Kp) + (derivative * Kd) + (integralSum * Ki);
         return out;
     }
+
+    private double armPIDControl(double reference, double lastError, DcMotor motor) {
+        Kp = .3;
+        double state = motor.getCurrentPosition();
+        double error = reference - state;
+        if(error < 100 && error > -100) {
+            error = 0;
+        }
+        integralSum += error * timer.seconds();
+        double derivative = (error-lastError) / timer.seconds();
+
+        lastError = error;
+
+        timer.reset();
+
+        double out = (error*Kp) + (derivative * Kd) + (integralSum * Ki);
+        return out;
+    }
     // tuned power
     public void strafe(int reference, int variance) {
         while(leftFrontDrive.getCurrentPosition() > reference - variance
@@ -81,7 +102,7 @@ public class Movement extends LinearOpMode{
         ) {
             double power = PIDControl(reference, reference, leftFrontDrive);
             leftFrontDrive.setPower(power);
-            rightFrontDrive.setPower(power);
+            rightFrontDrive.setPower(-power);
             rightBackDrive.setPower(-power);
             leftBackDrive.setPower(-power);
             if(leftFrontDrive.getCurrentPosition() >= reference - (variance+1)
@@ -98,21 +119,22 @@ public class Movement extends LinearOpMode{
     public void strafe(int reference, int variance, double power) {
         while(leftFrontDrive.getCurrentPosition() > reference - variance
                 || leftFrontDrive.getCurrentPosition() < reference + variance) {
-            leftFrontDrive.setPower(power);
-            rightFrontDrive.setPower(power);
-            rightBackDrive.setPower(-power);
-            leftBackDrive.setPower(-power);
+            leftFrontDrive.setPower(power * 0.5);
+            rightFrontDrive.setPower(-power * 0.5);
+            rightBackDrive.setPower(-power * 0.5);
+            leftBackDrive.setPower(-power * 0.5);
         }
     }
 
-    public void moveForwardToThree(int reference, int variance) {
+    public void moveForward(int reference, int variance, Telemetry telemetry) {
         while(leftFrontDrive.getCurrentPosition() > reference + variance
                 || leftFrontDrive.getCurrentPosition() < reference - variance) {
             double power = PIDControl(reference, reference, leftFrontDrive);
             leftFrontDrive.setPower(power * 0.5);
-            rightFrontDrive.setPower(-power * 0.5);
+            rightFrontDrive.setPower(power * 0.5);
             leftBackDrive.setPower(power * 0.5);
             rightBackDrive.setPower(-power * 0.5);
+            telemetry.addData("drive", leftFrontDrive.getCurrentPosition());
         }
     }
     public void left(int reference, int variance) {
@@ -121,7 +143,7 @@ public class Movement extends LinearOpMode{
             double power = PIDControl(reference, reference, leftFrontDrive);
             leftFrontDrive.setPower(0.5 * power);
             leftBackDrive.setPower(0.5 * power);
-            rightBackDrive.setPower(power);
+            rightBackDrive.setPower(-power);
             rightFrontDrive.setPower(power);
         }
     }
@@ -156,8 +178,8 @@ public class Movement extends LinearOpMode{
     public void linearSlide(int reference, int variance, Telemetry telemetry) {
         int y = linearSlide.getCurrentPosition();
         if(reference > y) {
-            armLeft.setPower(-.5);
-            armRight.setPower(.5);
+            armLeft.setPower(-.4);
+            armRight.setPower(.4);
         }
 
         reference /= 2;
@@ -189,14 +211,22 @@ public class Movement extends LinearOpMode{
         }
 
         if(reference < y + 1000) {
-            armLeft.setPower(-1);
-            armRight.setPower(1);
+            armLeft.setPower(-.6);
+            armRight.setPower(.6);
         }else if(reference > y) {
             armLeft.setPower(-.4);
             armRight.setPower(.4);
         }else {
             armLeft.setPower(-.5);
             armRight.setPower(.5);
+        }
+    }
+
+    public void claw(boolean open) {
+        if(open) {
+            claw.setPosition(0);
+        }else{
+            claw.setPosition(1);
         }
     }
 
