@@ -2,7 +2,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name = "direction")
-
 public class DirectionTest extends LinearOpMode{
     public void runOpMode() {
         Movement move = new Movement();
@@ -17,7 +16,9 @@ public class DirectionTest extends LinearOpMode{
 
 
         if (opModeIsActive()) {
-            move.strafe(500, 25);
+            move.strafe(-500, 60, telemetry);
+            move.moveForward(-1500, 25, telemetry);
+            move.left(-1200, 25);
         }
     }
 }
