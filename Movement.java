@@ -96,7 +96,7 @@ public class Movement extends LinearOpMode{
         return out;
     }
     // tuned power
-    public void strafe(int reference, int variance) {
+    public void strafe(int reference, int variance, Telemetry telemetry) {
         while(leftFrontDrive.getCurrentPosition() > reference - variance
                 || leftFrontDrive.getCurrentPosition() < reference + variance
         ) {
@@ -113,6 +113,8 @@ public class Movement extends LinearOpMode{
                 leftBackDrive.setPower(0);
                 break;
             }
+            telemetry.addData("pos(strafe)", leftFrontDrive.getCurrentPosition());
+            telemetry.update();
         }
     }
     //manual power version
@@ -141,10 +143,10 @@ public class Movement extends LinearOpMode{
         while(leftFrontDrive.getCurrentPosition() < reference - variance
                 || leftFrontDrive.getCurrentPosition() > reference + variance) {
             double power = PIDControl(reference, reference, leftFrontDrive);
-            leftFrontDrive.setPower(0.5 * power);
-            leftBackDrive.setPower(0.5 * power);
-            rightBackDrive.setPower(-power);
-            rightFrontDrive.setPower(power);
+            leftFrontDrive.setPower(power);
+            leftBackDrive.setPower(power);
+            rightBackDrive.setPower(power);
+            rightFrontDrive.setPower(-power);
         }
     }
     // public void scoreOnBoard(int reference, int variance, Telemetry telemetry) {
