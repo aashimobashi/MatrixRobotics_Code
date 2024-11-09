@@ -22,11 +22,11 @@ public class servo extends OpMode {
     
     @Override
     public void loop() {
-        if(gamepad1.a) {
+        if(gamepad1.x) {
             servo.setPosition(0);
         }
         
-        if(gamepad1.b){
+        if(gamepad1.y){
             
             servo.setPosition(1);
             
