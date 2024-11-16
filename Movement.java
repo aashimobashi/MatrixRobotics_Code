@@ -149,6 +149,13 @@ public class Movement extends LinearOpMode{
             rightFrontDrive.setPower(-power);
         }
     }
+    // public void claw(boolean expand) {
+    //     if(expand){
+    //         claw.setPosition(0);
+    //     }else {
+    //         claw.setPosition(1);
+    //     }
+    // }
     // public void scoreOnBoard(int reference, int variance, Telemetry telemetry) {
 
     //     while(linearSlide.getCurrentPosition() < reference - variance
@@ -228,7 +235,7 @@ public class Movement extends LinearOpMode{
         if(open) {
             claw.setPosition(0);
         }else{
-            claw.setPosition(1);
+            claw.setPosition(.4);
         }
     }
 

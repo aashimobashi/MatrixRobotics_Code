@@ -65,7 +65,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="teleopclaw")
+@TeleOp(name="teleop")
 
 public class CompTeleOp extends LinearOpMode {
 
@@ -78,7 +78,6 @@ public class CompTeleOp extends LinearOpMode {
     private DcMotor armLeft = null;
     private DcMotor armRight = null;
     private DcMotor linearSlide = null;
-    private CRServo claw = null;
 
     @Override
     public void runOpMode() {
@@ -92,7 +91,6 @@ public class CompTeleOp extends LinearOpMode {
         armLeft = hardwareMap.get(DcMotor.class, "arm_left");
         armRight = hardwareMap.get(DcMotor.class, "arm_right");
         linearSlide = hardwareMap.get(DcMotor.class, "linear_slide");
-        claw = hardwareMap.get(CRServo.class, "claw");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -108,8 +106,8 @@ public class CompTeleOp extends LinearOpMode {
         armRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        armRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODERS);
+        armRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODERS);
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
         rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -140,7 +138,7 @@ public class CompTeleOp extends LinearOpMode {
             double rightBackPower  = axial + lateral - yaw;
 
             // Normalize the values so no wheel power exceeds 100%
-            // This ensures that the robot maintains the de sired motion.
+            // This ensures that the robot maintains the desired motion.
             max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
             max = Math.max(max, Math.abs(leftBackPower));
             max = Math.max(max, Math.abs(rightBackPower));
@@ -219,13 +217,6 @@ public class CompTeleOp extends LinearOpMode {
                 linearSlide.setPower(0.01);
             }
 
-            if(gamepad1.a) {
-                claw.setPower(1);
-            }else if(gamepad1.b) {
-                claw.setPower(-1);
-            }else {
-                claw.setPower(0);
-            }
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
